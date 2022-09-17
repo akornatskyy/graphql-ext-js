@@ -1,5 +1,7 @@
 # graphql-ext-js
 
+[![tests](https://github.com/akornatskyy/graphql-ext-js/actions/workflows/tests.yml/badge.svg)](https://github.com/akornatskyy/graphql-ext-js/actions/workflows/tests.yml)
+
 GraphQL extensions and toolkit for JS.
 
 ## Install
