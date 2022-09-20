@@ -9,6 +9,7 @@ export type Options = {
 export function parseParams(
   options?: Options,
 ): (req: IncomingMessage) => Promise<GraphQLParams> {
+  // eslint-disable-next-line unicorn/numeric-separators-style
   const {limit = 10240} = options ?? {};
   return async (req: IncomingMessage): Promise<GraphQLParams> => {
     if (req.headers['content-type'] !== 'application/json') {

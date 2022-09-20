@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable unicorn/prefer-module */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const express = require('express');
 // const {graphql} = require('graphql-ext');
 const {graphql} = require('../dist');
@@ -20,4 +23,5 @@ async function main() {
   );
 }
 
+// eslint-disable-next-line unicorn/prefer-top-level-await
 main();

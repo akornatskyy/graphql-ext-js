@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "clean": "rimraf tsconfig.tsbuildinfo dist *.tgz"
+    "clean": "rimraf tsconfig.tsbuildinfo dist *.tgz",
+    "lint": "eslint . --format stylish --ext .ts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -44,9 +45,46 @@
   },
   "devDependencies": {
     "@types/node": "^18.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-unicorn": "^43.0.2",
+    "eslint": "^8.24.0",
     "express": "^4.18.1",
+    "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.8.4"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "no-null"
+    ],
+    "ignorePatterns": [
+      "dist/",
+      "node_modules/"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "google",
+      "plugin:import/errors",
+      "plugin:import/warnings",
+      "plugin:import/typescript",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:unicorn/recommended",
+      "prettier"
+    ],
+    "rules": {
+      "require-jsdoc": "off",
+      "unicorn/prefer-node-protocol": "off",
+      "unicorn/prevent-abbreviations": "off"
+    }
   },
   "publishConfig": {
     "tag": "alpha"

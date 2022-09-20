@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable unicorn/prefer-module */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const http = require('http');
 const {schema, rootValue} = require('./schema');
 // const {graphql} = require('graphql-ext');
@@ -17,4 +20,5 @@ async function main() {
   );
 }
 
+// eslint-disable-next-line unicorn/prefer-top-level-await
 main();

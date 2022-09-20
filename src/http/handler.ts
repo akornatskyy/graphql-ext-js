@@ -79,6 +79,7 @@ export function graphql(options: Options): RequestListener {
       if (r.errors !== undefined) {
         res.end(
           stringify({
+            // eslint-disable-next-line unicorn/no-array-callback-reference
             errors: r.errors.map(formatError),
             data: r.data,
           }),
