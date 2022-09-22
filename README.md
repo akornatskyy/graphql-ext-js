@@ -1,6 +1,7 @@
 # graphql-ext-js
 
 [![tests](https://github.com/akornatskyy/graphql-ext-js/actions/workflows/tests.yml/badge.svg)](https://github.com/akornatskyy/graphql-ext-js/actions/workflows/tests.yml)
+[![npm version](https://badge.fury.io/js/graphql-ext.svg)](https://www.npmjs.com/package/graphql-ext)
 
 GraphQL extensions and toolkit for JS.
 
@@ -34,30 +35,6 @@ async function main() {
     }),
   );
   app.listen(4000, () =>
-    console.info('Running a GraphQL API at http://localhost:4000/graphql'),
-  );
-}
-
-main();
-```
-
-### http
-
-```js
-const http = require('http');
-const {graphql} = require('graphql-ext');
-const {schema, rootValue} = require('./schema');
-
-async function main() {
-  const handler = graphql({schema, rootValue});
-  const server = http.createServer((req, res) => {
-    if (req.url === '/graphql' && req.method === 'POST') {
-      handler(req, res);
-    } else {
-      res.writeHead(404).end();
-    }
-  });
-  server.listen(4000, () =>
     console.info('Running a GraphQL API at http://localhost:4000/graphql'),
   );
 }
