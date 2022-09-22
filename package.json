@@ -1,7 +1,7 @@
 {
   "name": "graphql-ext",
   "private": "true",
-  "version": "0.1.0-alpha",
+  "version": "1.0.0",
   "description": "GraphQL extensions and toolkit for JS.",
   "author": "Andriy Kornatskyy",
   "license": "MIT",
@@ -91,8 +91,5 @@
       "unicorn/prefer-node-protocol": "off",
       "unicorn/prevent-abbreviations": "off"
     }
-  },
-  "publishConfig": {
-    "tag": "alpha"
   }
 }
