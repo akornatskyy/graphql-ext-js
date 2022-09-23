@@ -3,8 +3,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const express = require('express');
 const {specifiedRules: rules} = require('graphql');
-// const {graphql} = require('graphql-ext');
-const {graphql} = require('../dist');
+// const {graphql} = require('graphql-ext/http');
+const {graphql} = require('../dist/http');
 const {schema, rootValue} = require('./schema');
 
 async function main() {

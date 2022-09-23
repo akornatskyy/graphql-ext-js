@@ -20,7 +20,7 @@ See [examples](./examples).
 ```js
 const express = require('express');
 const {specifiedRules: rules} = require('graphql');
-const {graphql} = require('graphql-ext');
+const {graphql} = require('graphql-ext/http');
 const {schema, rootValue} = require('./schema');
 
 async function main() {

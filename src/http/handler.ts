@@ -38,8 +38,8 @@ export type Options = {
 export function graphql(options: Options): RequestListener {
   const {
     schema,
-    rules,
     rootValue,
+    rules,
     context = (req) => req,
     formatError = defaultFormatError,
     parseParams = defaultParseParams(),

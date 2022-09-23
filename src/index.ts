@@ -1,1 +1,1 @@
-export {graphql, Options} from './http/handler';
+export * from './http';

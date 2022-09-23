@@ -4,8 +4,8 @@
 const http = require('http');
 const {specifiedRules: rules} = require('graphql');
 const {schema, rootValue} = require('./schema');
-// const {graphql} = require('graphql-ext');
-const {graphql} = require('../dist');
+// const {graphql} = require('graphql-ext/http');
+const {graphql} = require('../dist/http');
 
 async function main() {
   const handler = graphql({schema, rules, rootValue});

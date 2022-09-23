@@ -37,7 +37,15 @@
     "!dist/**/__tests__"
   ],
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./http": "./dist/http/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "http": [
+        "dist/http"
+      ]
+    }
   },
   "peerDependencies": {
     "graphql": "^16.6.0",
