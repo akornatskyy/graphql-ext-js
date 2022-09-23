@@ -19,6 +19,7 @@ See [examples](./examples).
 
 ```js
 const express = require('express');
+const {specifiedRules: rules} = require('graphql');
 const {graphql} = require('graphql-ext');
 const {schema, rootValue} = require('./schema');
 
@@ -30,6 +31,7 @@ async function main() {
     graphql({
       schema,
       rootValue,
+      rules,
       parseParams: async (req) => req.body,
       context: (req) => req.headers['x-user'],
     }),

@@ -2,6 +2,7 @@
 /* eslint-disable unicorn/prefer-module */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const express = require('express');
+const {specifiedRules: rules} = require('graphql');
 // const {graphql} = require('graphql-ext');
 const {graphql} = require('../dist');
 const {schema, rootValue} = require('./schema');
@@ -14,6 +15,7 @@ async function main() {
     graphql({
       schema,
       rootValue,
+      rules,
       parseParams: async (req) => req.body,
       context: (req) => req.headers['x-user'],
     }),

@@ -2,12 +2,13 @@
 /* eslint-disable unicorn/prefer-module */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const http = require('http');
+const {specifiedRules: rules} = require('graphql');
 const {schema, rootValue} = require('./schema');
 // const {graphql} = require('graphql-ext');
 const {graphql} = require('../dist');
 
 async function main() {
-  const handler = graphql({schema, rootValue});
+  const handler = graphql({schema, rules, rootValue});
   const server = http.createServer((req, res) => {
     if (req.url === '/graphql' && req.method === 'POST') {
       handler(req, res);
