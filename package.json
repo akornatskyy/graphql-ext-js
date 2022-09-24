@@ -38,12 +38,16 @@
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./http": "./dist/http/index.js"
+    "./http": "./dist/http/index.js",
+    "./misc": "./dist/misc/index.js"
   },
   "typesVersions": {
     "*": {
       "http": [
         "dist/http"
+      ],
+      "misc": [
+        "dist/misc"
       ]
     }
   },
