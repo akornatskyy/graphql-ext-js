@@ -1,4 +1,5 @@
 import {
+  ASTVisitor,
   DocumentNode,
   GraphQLError,
   GraphQLSchema,
@@ -8,7 +9,13 @@ import {
   visitInParallel,
   visitWithTypeInfo,
 } from 'graphql';
-import {ValidationRule, Variables} from './types';
+
+export type Variables = {readonly [name: string]: unknown};
+
+export type ValidationRule = (
+  ctx: ValidationContext,
+  variables?: Variables,
+) => ASTVisitor;
 
 export function validate(
   schema: GraphQLSchema,

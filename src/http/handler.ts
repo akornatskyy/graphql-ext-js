@@ -7,11 +7,14 @@ import {
   parse,
 } from 'graphql';
 import {IncomingMessage, RequestListener, ServerResponse} from 'http';
-import {formatError as defaultFormatError} from './format';
-import {parseParams as defaultParseParams} from './params';
-import {GraphQLParams, ValidationRule, Variables} from './types';
+import {formatError as defaultFormatError} from '../misc/format';
+import {
+  validate as defaultValidate,
+  ValidationRule,
+  Variables,
+} from '../misc/validate';
+import {GraphQLParams, parseParams as defaultParseParams} from './params';
 import {unexpectedErrorHandler} from './unexpected';
-import {validate as defaultValidate} from './validate';
 
 export type Options = {
   schema: GraphQLSchema;

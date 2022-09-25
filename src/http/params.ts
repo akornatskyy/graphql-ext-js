@@ -1,6 +1,11 @@
 import {IncomingMessage} from 'http';
 import getRawBody from 'raw-body';
-import {GraphQLParams} from './types';
+import {Variables} from '../misc/validate';
+
+export type GraphQLParams = {
+  query?: string;
+  variables?: Variables;
+};
 
 export type Options = {
   limit?: number;
