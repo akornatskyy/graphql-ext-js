@@ -43,3 +43,42 @@ async function main() {
 
 main();
 ```
+
+### validation
+
+```graphql
+directive @range(
+  min: Int
+  max: Int
+  message: String
+) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+# ...
+
+type Query {
+  test(value: Int @range(min: 0))
+}
+
+input Object {
+  value: Int! @range(min: 0, max: 100)
+}
+```
+
+```js
+const {specifiedRules} = require('graphql');
+const {inputValidationDirectiveRule} = require('graphql-ext/validation');
+const {range} = require('graphql-ext/validation/rules');
+
+app.post(
+  '/graphql',
+  graphql({
+    // ...
+    rules: [
+      ...specifiedRules,
+      inputValidationDirectiveRule({
+        entries: [['range', range]],
+      }),
+    ],
+  }),
+);
+```

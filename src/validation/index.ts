@@ -1,0 +1,1 @@
+export {inputValidationDirectiveRule} from './validation';
