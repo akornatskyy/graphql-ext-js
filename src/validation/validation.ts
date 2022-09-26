@@ -79,15 +79,18 @@ class Visitor {
   enterOperationDefinition(node: OperationDefinitionNode) {
     const schema = this.ctx.getSchema();
     switch (node.operation) {
-      case 'mutation':
+      case 'mutation': {
         this.fields = schema.getMutationType()!.getFields();
         break;
-      case 'query':
+      }
+      case 'query': {
         this.fields = schema.getQueryType()!.getFields();
         break;
-      case 'subscription':
+      }
+      case 'subscription': {
         this.fields = schema.getSubscriptionType()!.getFields();
         break;
+      }
     }
 
     const {coerced} = getVariableValues(
