@@ -64,7 +64,7 @@ describe('input validation directive rule', () => {
                 "max": 10,
               },
               "code": "EINVAL",
-              "directive": "@range",
+              "directive": "range",
             },
             "locations": [
               {
@@ -130,6 +130,159 @@ describe('input validation directive rule', () => {
     expect(errors).toMatchInlineSnapshot(`[]`);
   });
 
+  describe('multiple queries with arguments', () => {
+    const schema = `
+      directive @range(max: Int) on ARGUMENT_DEFINITION
+      type Query {
+        a(input: Int! @range(max: 10)): Int
+        b(input: Int! @range(max: 5)): Int
+      }
+    `;
+    const query = `
+      query ($input: Int!) {
+        a(input: $input)
+        b(input: $input)
+      }
+    `;
+    it('pass', () => {
+      const errors = prepare(schema, query, {input: 0});
+      expect(errors).toMatchInlineSnapshot(`[]`);
+    });
+
+    it('value undefined', () => {
+      const errors = prepare(schema, query, {});
+      expect(errors).toMatchInlineSnapshot(`[]`);
+    });
+
+    it('fail some', () => {
+      const errors = prepare(schema, query, {input: 7});
+      expect(errors).toMatchInlineSnapshot(`
+        [
+          {
+            "extensions": {
+              "args": {
+                "max": 5,
+              },
+              "code": "EINVAL",
+              "directive": "range",
+            },
+            "locations": [
+              {
+                "column": 11,
+                "line": 5,
+              },
+            ],
+            "message": "Exceeds maximum allowed value of 5.",
+            "path": [
+              "b",
+              "input",
+            ],
+          },
+        ]
+      `);
+    });
+
+    it('fail all', () => {
+      const errors = prepare(schema, query, {input: 20});
+      expect(errors).toMatchInlineSnapshot(`
+        [
+          {
+            "extensions": {
+              "args": {
+                "max": 10,
+              },
+              "code": "EINVAL",
+              "directive": "range",
+            },
+            "locations": [
+              {
+                "column": 11,
+                "line": 4,
+              },
+            ],
+            "message": "Exceeds maximum allowed value of 10.",
+            "path": [
+              "a",
+              "input",
+            ],
+          },
+          {
+            "extensions": {
+              "args": {
+                "max": 5,
+              },
+              "code": "EINVAL",
+              "directive": "range",
+            },
+            "locations": [
+              {
+                "column": 11,
+                "line": 5,
+              },
+            ],
+            "message": "Exceeds maximum allowed value of 5.",
+            "path": [
+              "b",
+              "input",
+            ],
+          },
+        ]
+      `);
+    });
+  });
+
+  describe('multiple queries with object', () => {
+    const schema = `
+      directive @range(max: Int) on ARGUMENT_DEFINITION
+      type Query {
+        a: Object
+        b(input: Int! @range(max: 5)): Int
+      }
+      type Object {
+        value: Int
+      }
+    `;
+    const query = `
+      query ($input: Int!) {
+        a {value}
+        b(input: $input)
+      }
+    `;
+
+    it('pass', () => {
+      const errors = prepare(schema, query, {input: 0});
+      expect(errors).toMatchInlineSnapshot(`[]`);
+    });
+
+    it('fail', () => {
+      const errors = prepare(schema, query, {input: 10});
+      expect(errors).toMatchInlineSnapshot(`
+        [
+          {
+            "extensions": {
+              "args": {
+                "max": 5,
+              },
+              "code": "EINVAL",
+              "directive": "range",
+            },
+            "locations": [
+              {
+                "column": 11,
+                "line": 5,
+              },
+            ],
+            "message": "Exceeds maximum allowed value of 5.",
+            "path": [
+              "b",
+              "input",
+            ],
+          },
+        ]
+      `);
+    });
+  });
+
   describe.each(['[Int]', '[Int!]', '[Int]!', '[Int!]!'])(
     'query input list %s',
     (t) => {
@@ -182,7 +335,7 @@ describe('input validation directive rule', () => {
                   "min": 2,
                 },
                 "code": "EINVAL",
-                "directive": "@items",
+                "directive": "items",
               },
               "locations": [
                 {
@@ -210,7 +363,7 @@ describe('input validation directive rule', () => {
                   "max": 10,
                 },
                 "code": "EINVAL",
-                "directive": "@range",
+                "directive": "range",
               },
               "locations": [
                 {
@@ -294,7 +447,7 @@ describe('input validation directive rule', () => {
                   "min": 2,
                 },
                 "code": "EINVAL",
-                "directive": "@items",
+                "directive": "items",
               },
               "locations": [
                 {
@@ -324,7 +477,7 @@ describe('input validation directive rule', () => {
                   "max": 10,
                 },
                 "code": "EINVAL",
-                "directive": "@range",
+                "directive": "range",
               },
               "locations": [
                 {
@@ -346,7 +499,7 @@ describe('input validation directive rule', () => {
                   "max": 10,
                 },
                 "code": "EINVAL",
-                "directive": "@range",
+                "directive": "range",
               },
               "locations": [
                 {

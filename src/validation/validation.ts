@@ -4,12 +4,9 @@ import {
   ArgumentNode,
   ASTVisitor,
   BREAK,
-  FieldNode,
   getDirectiveValues,
   getVariableValues,
   GraphQLError,
-  GraphQLField,
-  GraphQLFieldMap,
   GraphQLInputObjectType,
   GraphQLInputType,
   GraphQLList,
@@ -47,24 +44,19 @@ export function inputValidationDirectiveRule(options: Options) {
     const visitor = new Visitor(rules, ctx, variables);
     // TODO: fragment definition, inline fragment
     return {
-      OperationDefinition: {
-        enter: visitor.enterOperationDefinition,
-      },
+      OperationDefinition: visitor.enterOperationDefinition,
       Field: {
-        enter: visitor.enterFieldNode,
+        enter: visitor.enterField,
+        leave: visitor.leaveField,
       },
-      Argument: {
-        enter: visitor.enterArgumentNode,
-      },
+      Argument: visitor.enterArgument,
     };
   };
 }
 
 class Visitor {
-  private fields?: GraphQLFieldMap<unknown, unknown>;
+  private readonly path: string[] = [];
   private variableValues?: Variables;
-  private field?: GraphQLField<unknown, unknown>;
-  private path: string[] = [];
 
   constructor(
     private readonly rules: Map<string, InputValidationRule>,
@@ -72,29 +64,14 @@ class Visitor {
     private readonly variables: Variables,
   ) {
     this.enterOperationDefinition = this.enterOperationDefinition.bind(this);
-    this.enterFieldNode = this.enterFieldNode.bind(this);
-    this.enterArgumentNode = this.enterArgumentNode.bind(this);
+    this.enterField = this.enterField.bind(this);
+    this.leaveField = this.leaveField.bind(this);
+    this.enterArgument = this.enterArgument.bind(this);
   }
 
   enterOperationDefinition(node: OperationDefinitionNode) {
-    const schema = this.ctx.getSchema();
-    switch (node.operation) {
-      case 'mutation': {
-        this.fields = schema.getMutationType()!.getFields();
-        break;
-      }
-      case 'query': {
-        this.fields = schema.getQueryType()!.getFields();
-        break;
-      }
-      case 'subscription': {
-        this.fields = schema.getSubscriptionType()!.getFields();
-        break;
-      }
-    }
-
     const {coerced} = getVariableValues(
-      schema,
+      this.ctx.getSchema(),
       node.variableDefinitions ?? [],
       this.variables,
     );
@@ -105,18 +82,25 @@ class Visitor {
     this.variableValues = coerced;
   }
 
-  enterFieldNode(node: FieldNode) {
-    const field = this.fields![node.name.value];
+  enterField() {
+    const field = this.ctx.getFieldDef();
     if (!field) {
       return BREAK;
     }
 
-    this.field = field;
     this.path.push(field.name);
   }
 
-  enterArgumentNode(node: ArgumentNode) {
-    const arg = this.field!.args.find((x) => x.name === node.name.value)!;
+  leaveField() {
+    this.path.pop();
+  }
+
+  enterArgument(node: ArgumentNode) {
+    const arg = this.ctx.getArgument();
+    if (!arg) {
+      return BREAK;
+    }
+
     let t = arg.type;
     if (isNonNullType(t)) {
       t = t.ofType;
@@ -145,7 +129,7 @@ class Visitor {
     }
   }
 
-  checkScalar(
+  private checkScalar(
     node: InputValueDefinitionNode,
     value: unknown | undefined,
     input?: Record<string, unknown>,
@@ -179,7 +163,7 @@ class Visitor {
     for (const d of directives) {
       const name = d.name.value;
       const rule = this.rules.get(name);
-      if (!rule) {
+      if (rule === undefined) {
         continue;
       }
 
@@ -187,7 +171,7 @@ class Visitor {
       const directiveValues = getDirectiveValues(directive, node)!;
 
       const error = rule(value, directiveValues, input);
-      if (!error) {
+      if (error === undefined) {
         continue;
       }
 
@@ -198,7 +182,7 @@ class Visitor {
           path: [...this.path, node.name.value],
           extensions: {
             code: ERROR_CODE,
-            directive: directive.toString(),
+            directive: name,
             args,
           },
         }),
@@ -207,7 +191,7 @@ class Visitor {
     }
   }
 
-  checkInputObjectType(
+  private checkInputObjectType(
     t: GraphQLInputObjectType,
     input: Record<string, unknown> | undefined,
   ) {
@@ -216,13 +200,12 @@ class Visitor {
     }
 
     visit(t.astNode!, {
-      InputValueDefinition: {
-        enter: (n) => this.checkScalar(n, input[n.name.value], input),
-      },
+      InputValueDefinition: (n) =>
+        this.checkScalar(n, input[n.name.value], input),
     });
   }
 
-  checkList(
+  private checkList(
     t: GraphQLList<GraphQLInputType>,
     node: InputValueDefinitionNode,
     values: unknown[],
@@ -239,7 +222,7 @@ class Visitor {
     }
   }
 
-  checkListOfScalar(node: InputValueDefinitionNode, values: unknown[]) {
+  private checkListOfScalar(node: InputValueDefinitionNode, values: unknown[]) {
     const directives = node.directives;
     if (directives === undefined || directives.length === 0) {
       return;
@@ -249,7 +232,7 @@ class Visitor {
     for (const d of directives) {
       const name = d.name.value;
       const rule = this.rules.get(name);
-      if (!rule) {
+      if (rule === undefined) {
         continue;
       }
 
@@ -257,7 +240,7 @@ class Visitor {
       const directiveValues = getDirectiveValues(directive, node)!;
 
       const error = rule(values, directiveValues);
-      if (error) {
+      if (error !== undefined) {
         const {message: _, ...args} = directiveValues;
         this.ctx.reportError(
           new GraphQLError(error, {
@@ -265,7 +248,7 @@ class Visitor {
             path: [...this.path, node.name.value],
             extensions: {
               code: ERROR_CODE,
-              directive: directive.toString(),
+              directive: name,
               args,
             },
           }),
@@ -275,7 +258,7 @@ class Visitor {
 
       for (const [i, value] of values.entries()) {
         const error = rule(value, directiveValues);
-        if (!error) {
+        if (error === undefined) {
           continue;
         }
 
@@ -286,7 +269,7 @@ class Visitor {
             path: [...this.path, node.name.value, i.toString()],
             extensions: {
               code: ERROR_CODE,
-              directive: directive.toString(),
+              directive: name,
               args,
             },
           }),
@@ -296,7 +279,7 @@ class Visitor {
     }
   }
 
-  checkListOfInputObject(
+  private checkListOfInputObject(
     node: InputValueDefinitionNode,
     inputObjectType: GraphQLInputObjectType,
     values: unknown[],
@@ -311,7 +294,7 @@ class Visitor {
     for (const d of directives) {
       const name = d.name.value;
       const rule = this.rules.get(name);
-      if (!rule) {
+      if (rule === undefined) {
         continue;
       }
 
@@ -319,7 +302,7 @@ class Visitor {
       const directiveValues = getDirectiveValues(directive, node)!;
 
       const error = rule(values, directiveValues);
-      if (error) {
+      if (error !== undefined) {
         const {message: _, ...args} = directiveValues;
         this.ctx.reportError(
           new GraphQLError(error, {
@@ -327,7 +310,7 @@ class Visitor {
             path: [...this.path],
             extensions: {
               code: ERROR_CODE,
-              directive: directive.toString(),
+              directive: name,
               args,
             },
           }),
