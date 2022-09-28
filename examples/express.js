@@ -7,7 +7,7 @@ const {specifiedRules: rules} = require('graphql');
 const {graphql} = require('../dist/http');
 const {schema, rootValue} = require('./schema');
 
-async function main() {
+function main() {
   const app = express();
   app.use(express.json());
   app.post(

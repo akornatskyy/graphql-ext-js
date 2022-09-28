@@ -7,7 +7,7 @@ const {schema, rootValue} = require('./schema');
 // const {graphql} = require('graphql-ext/http');
 const {graphql} = require('../dist/http');
 
-async function main() {
+function main() {
   const handler = graphql({schema, rules, rootValue});
   const server = http.createServer((req, res) => {
     if (req.url === '/graphql' && req.method === 'POST') {
