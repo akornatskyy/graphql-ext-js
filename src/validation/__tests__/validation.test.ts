@@ -4,9 +4,9 @@ import {
   parse,
   specifiedRules,
 } from 'graphql';
+import {inputValidationDirectiveRule} from '../';
 import {validate, Variables} from '../../misc/validate';
 import {items, range} from '../rules';
-import {inputValidationDirectiveRule} from '../validation';
 
 describe('input validation directive rule', () => {
   describe.each(['Int', 'Int!'])('query scalar %s', (t) => {

@@ -1,4 +1,4 @@
-type RegexArgs = {message?: string};
+export type RegexArgs = {message?: string};
 
 export function regex(
   re: RegExp,

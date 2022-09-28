@@ -1,4 +1,4 @@
-type ItemsArgs = {min?: number; max?: number; message?: string};
+export type ItemsArgs = {min?: number; max?: number; message?: string};
 
 const MAX_ARRAY_ITEMS = 2 ** 32 - 1;
 

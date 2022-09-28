@@ -1,4 +1,4 @@
-type LengthArgs = {min?: number; max?: number; message?: string};
+export type LengthArgs = {min?: number; max?: number; message?: string};
 
 export function length(
   value: unknown | undefined,

@@ -1,4 +1,4 @@
-type RegexArgs = {message?: string};
+export type PredicateArgs = {message?: string};
 
 export function predicate(
   condition: (value: unknown, object?: Record<string, unknown>) => boolean,
@@ -6,7 +6,7 @@ export function predicate(
 ) {
   return (
     value: unknown | undefined,
-    args: RegexArgs,
+    args: PredicateArgs,
     object?: Record<string, unknown>,
   ): string | undefined => {
     if (value === undefined) {

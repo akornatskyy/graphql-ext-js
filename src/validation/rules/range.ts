@@ -1,4 +1,4 @@
-type RangeArgs = {min?: number; max?: number; message?: string};
+export type RangeArgs = {min?: number; max?: number; message?: string};
 
 export function range(
   value: unknown | undefined,
