@@ -23,7 +23,7 @@ const {specifiedRules: rules} = require('graphql');
 const {graphql} = require('graphql-ext/http');
 const {schema, rootValue} = require('./schema');
 
-async function main() {
+function main() {
   const app = express();
   app.use(express.json());
   app.post(
@@ -47,27 +47,21 @@ main();
 ### validation
 
 ```graphql
-directive @range(
+directive @length(
   min: Int
   max: Int
   message: String
 ) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
-# ...
-
 type Query {
-  test(value: Int @range(min: 0))
-}
-
-input Object {
-  value: Int! @range(min: 0, max: 100)
+  hello(name: String! @length(min: 2, max: 10)): String!
 }
 ```
 
 ```js
 const {specifiedRules} = require('graphql');
 const {inputValidationDirectiveRule} = require('graphql-ext/validation');
-const {range} = require('graphql-ext/validation/rules');
+const {length} = require('graphql-ext/validation/rules');
 
 app.post(
   '/graphql',
@@ -76,7 +70,7 @@ app.post(
     rules: [
       ...specifiedRules,
       inputValidationDirectiveRule({
-        entries: [['range', range]],
+        entries: [['length', length]],
       }),
     ],
   }),
