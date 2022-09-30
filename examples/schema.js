@@ -3,7 +3,7 @@
 // eslint-disable-next-line unicorn/prefer-module
 const {buildSchema} = require('graphql');
 
-const schema = buildSchema(`
+const schema = buildSchema(/* GraphQL */ `
   type Query {
     hello: String
   }

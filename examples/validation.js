@@ -4,13 +4,13 @@
 const express = require('express');
 const {buildSchema, specifiedRules} = require('graphql');
 // const {graphql} = require('graphql-ext/http');
-const {graphql} = require('../dist/http');
 // const {inputValidationDirectiveRule} = require('graphql-ext/validation');
-const {inputValidationDirectiveRule} = require('../dist/validation');
 // const {length} = require('graphql-ext/validation/rules');
+const {graphql} = require('../dist/http');
+const {inputValidationDirectiveRule} = require('../dist/validation');
 const {length} = require('../dist/validation/rules');
 
-const schema = buildSchema(`
+const schema = buildSchema(/* GraphQL */ `
   directive @length(
     min: Int
     max: Int
