@@ -97,7 +97,8 @@ class Visitor {
 
   enterArgument(node: ArgumentNode) {
     const arg = this.ctx.getArgument();
-    if (!arg) {
+    if (!arg || !arg.astNode) {
+      // TODO: arg.astNode is null when fragment is used
       return BREAK;
     }
 
@@ -108,7 +109,7 @@ class Visitor {
 
     if (isScalarType(t)) {
       this.checkScalar(
-        arg.astNode!,
+        arg.astNode,
         valueFromAST(node.value, t, this.variableValues),
       );
     } else if (isInputObjectType(t)) {
@@ -125,7 +126,7 @@ class Visitor {
         t,
         this.variableValues,
       ) as unknown[];
-      this.checkList(t, arg.astNode!, input);
+      this.checkList(t, arg.astNode, input);
     }
   }
 
