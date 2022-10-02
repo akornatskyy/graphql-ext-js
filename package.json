@@ -29,6 +29,7 @@
     "graphql",
     "http",
     "middleware",
+    "relay",
     "validation"
   ],
   "engines": {
@@ -42,6 +43,7 @@
     ".": "./dist/index.js",
     "./http": "./dist/http/index.js",
     "./misc": "./dist/misc/index.js",
+    "./relay": "./dist/relay/index.js",
     "./validation": "./dist/validation/index.js",
     "./validation/rules": "./dist/validation/rules/index.js"
   },
@@ -52,6 +54,9 @@
       ],
       "misc": [
         "dist/misc"
+      ],
+      "relay": [
+        "dist/relay"
       ],
       "validation": [
         "dist/validation"

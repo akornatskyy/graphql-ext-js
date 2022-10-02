@@ -76,3 +76,55 @@ app.post(
   }),
 );
 ```
+
+### relay
+
+```graphql
+directive @range(
+  min: Int
+  max: Int
+  message: String
+) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Query {
+  numbers(
+    first: Int @range(min: 1, max: 15)
+    after: String
+    last: Int @range(min: 1, max: 15)
+    before: String
+  ): NumberConnection!
+}
+
+type NumberConnection {
+  edges: [NumberEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type NumberEdge {
+  cursor: String!
+  node: Int!
+}
+
+type PageInfo {
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+}
+```
+
+```js
+const {CursorConnection} = require('graphql-ext/relay');
+const {addResolvers} = require('graphql-ext/misc');
+
+// ...
+const items = Array.from({length: 20}).map((_, i) => i);
+const cc = new CursorConnection('numbers:');
+const resolvers = {
+  Query: {
+    numbers: (parent, args) => cc.fromArray(items, args),
+  },
+};
+addResolvers(schema, resolvers);
+```
