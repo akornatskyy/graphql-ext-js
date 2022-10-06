@@ -8,8 +8,8 @@ import {
   getVariableValues,
   GraphQLError,
   GraphQLInputObjectType,
-  GraphQLInputType,
   GraphQLList,
+  GraphQLType,
   InputValueDefinitionNode,
   isInputObjectType,
   isListType,
@@ -154,6 +154,9 @@ class Visitor {
       );
       this.path.pop();
       return;
+    } else if (isListType(inputObjectType)) {
+      this.checkList(inputObjectType, node, value as unknown[]);
+      return;
     }
 
     const directives = node.directives;
@@ -207,7 +210,7 @@ class Visitor {
   }
 
   private checkList(
-    t: GraphQLList<GraphQLInputType>,
+    t: GraphQLList<GraphQLType>,
     node: InputValueDefinitionNode,
     values: unknown[],
   ) {

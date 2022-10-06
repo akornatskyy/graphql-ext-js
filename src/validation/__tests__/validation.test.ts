@@ -384,8 +384,124 @@ describe('input validation directive rule', () => {
     },
   );
 
+  describe.each(['[Int]', '[Int!]', '[Int]!', '[Int!]!'])(
+    'query input list of primitives %s',
+    (t) => {
+      const schema = `
+        directive @items(min: Int) on INPUT_FIELD_DEFINITION
+        directive @range(max: Int) on INPUT_FIELD_DEFINITION
+        type Query {
+          test(input: Object): Int
+        }
+        input Object {
+          value: ${t} @items(min: 2) @range(max: 10)
+        }
+      `;
+      const query = `
+        query ($input: Object) {
+          test(input: $input)
+        }
+      `;
+
+      it('none', () => {
+        const schema = `
+          type Query {
+            test(input: Object): Int
+          }
+          input Object {
+            value: ${t}
+          }
+        `;
+        const errors = prepare(schema, query, {input: {value: [100]}});
+        expect(errors).toMatchInlineSnapshot(`[]`);
+      });
+
+      it('unknown', () => {
+        const schema = `
+          directive @x on INPUT_FIELD_DEFINITION
+          type Query {
+            test(input: Object): Int
+          }
+          input Object {
+            value: ${t} @x
+          }
+        `;
+        const errors = prepare(schema, query, {input: {value: [100]}});
+        expect(errors).toMatchInlineSnapshot(`[]`);
+      });
+
+      it('pass', () => {
+        const errors = prepare(schema, query, {
+          input: {value: [5, 10]},
+        });
+        expect(errors).toMatchInlineSnapshot(`[]`);
+      });
+
+      it('fail for list', () => {
+        const errors = prepare(schema, query, {input: {value: [100]}});
+        expect(errors).toMatchInlineSnapshot(`
+          [
+            {
+              "extensions": {
+                "args": {
+                  "min": 2,
+                },
+                "code": "EINVAL",
+                "directive": "items",
+              },
+              "locations": [
+                {
+                  "column": 11,
+                  "line": 8,
+                },
+              ],
+              "message": "Required to be a minimum of 2 items in length.",
+              "path": [
+                "test",
+                "input",
+                "value",
+              ],
+            },
+          ]
+        `);
+      });
+
+      it('fail for all items', () => {
+        const errors = prepare(schema, query, {
+          input: {value: [5, 100, 200]},
+        });
+        expect(errors).toMatchInlineSnapshot(`
+          [
+            {
+              "extensions": {
+                "args": {
+                  "max": 10,
+                },
+                "code": "EINVAL",
+                "directive": "range",
+              },
+              "locations": [
+                {
+                  "column": 11,
+                  "line": 8,
+                },
+              ],
+              "message": "Exceeds maximum allowed value of 10.",
+              "path": [
+                "test",
+                "input",
+                "value",
+                "1",
+              ],
+            },
+          ]
+        `);
+      });
+    },
+  );
+
   describe.each(['[Object]', '[Object!]', '[Object]!', '[Object!]!'])(
-    'query input list %s',
+    'query input list of objects %s',
     (t) => {
       const schema = `
         directive @items(min: Int) on ARGUMENT_DEFINITION
