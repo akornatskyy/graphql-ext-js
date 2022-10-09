@@ -197,9 +197,9 @@ class Visitor {
 
   private checkInputObjectType(
     t: GraphQLInputObjectType,
-    input: Record<string, unknown> | undefined,
+    input: Record<string, unknown> | null | undefined,
   ) {
-    if (input === undefined) {
+    if (!input) {
       return;
     }
 

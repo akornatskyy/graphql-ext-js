@@ -701,6 +701,25 @@ describe('input validation directive rule', () => {
     const errors = prepare(schema, query);
     expect(errors).toMatchInlineSnapshot(`[]`);
   });
+
+  it('noop if variables value is null', () => {
+    const schema = `
+      type Query {
+        test(input: Object): Int
+      }
+      input Object {
+        value: Int
+      }
+    `;
+    const query = `
+      query ($input: Object) {
+        test(input: $input)
+      }
+    `;
+    // eslint-disable-next-line unicorn/no-null
+    const errors = prepare(schema, query, {input: null});
+    expect(errors).toMatchInlineSnapshot(`[]`);
+  });
 });
 
 function prepare(
