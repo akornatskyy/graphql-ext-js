@@ -135,7 +135,7 @@ class Visitor {
     value: unknown | undefined,
     input?: Record<string, unknown>,
   ) {
-    if (value === undefined) {
+    if (!value) {
       return;
     }
 
