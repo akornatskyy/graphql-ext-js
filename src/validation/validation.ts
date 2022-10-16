@@ -132,10 +132,10 @@ class Visitor {
 
   private checkScalar(
     node: InputValueDefinitionNode,
-    value: unknown | undefined,
+    value: unknown | null | undefined,
     input?: Record<string, unknown>,
   ) {
-    if (!value) {
+    if (value === undefined || value === null) {
       return;
     }
 
