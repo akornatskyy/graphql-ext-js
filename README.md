@@ -128,3 +128,23 @@ const resolvers = {
 };
 addResolvers(schema, resolvers);
 ```
+
+offset paging:
+
+```js
+const service = {
+  countNumbers: async () => items.length,
+  listNumbers: async ({offset, limit}) => items.slice(offset, offset + limit),
+};
+
+const resolvers = {
+  Query: {
+    numbers: async (parent, args) => {
+      const totalCount = await service.countNumbers();
+      const [offset, limit] = cc.toOffsetPaging(args, totalCount);
+      const items = await service.listNumbers({offset, limit});
+      return cc.fromSlice(items, offset, totalCount);
+    },
+  },
+};
+```
