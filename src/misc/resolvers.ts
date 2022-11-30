@@ -8,9 +8,14 @@ export type Resolver<Context> = (
   info: GraphQLResolveInfo,
 ) => Promise<unknown> | unknown;
 
+export type Subscriber<Context> = {
+  subscribe: Resolver<Context>;
+  resolve: Resolver<Context>;
+};
+
 export type Resolvers<Context> = {
   [typeName: string]: {
-    [fieldName: string]: Resolver<Context>;
+    [fieldName: string]: Resolver<Context> | Subscriber<Context>;
   };
 };
 
@@ -45,7 +50,13 @@ export function addResolvers<Context = unknown>(
         continue;
       }
 
-      field.resolve = resolver[fieldName];
+      const r = resolver[fieldName];
+      if (typeof r === 'function') {
+        field.resolve = r;
+      } else if (typeName === 'Subscription') {
+        field.subscribe = r.subscribe;
+        field.resolve = r.resolve;
+      }
     }
   }
 }
