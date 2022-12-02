@@ -148,3 +148,31 @@ const resolvers = {
   },
 };
 ```
+
+## subscription
+
+Subscription returns [ndjson](https://github.com/ndjson/ndjson-spec) stream.
+
+```graphql
+type Subscription {
+  countdown(initial: Int! = 2): Int
+}
+```
+
+```js
+const resolvers = {
+  Subscription: {
+    countdown: {
+      async *subscribe(_, {initial}) {
+        for (let i = initial; i >= 0; i--) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          yield i;
+        }
+      },
+      resolve(value) {
+        return value;
+      },
+    },
+  },
+};
+```
