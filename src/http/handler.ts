@@ -30,7 +30,7 @@ export type Options = {
   formatError?: (error: GraphQLError) => GraphQLFormattedError;
   parseParams?: <Request extends IncomingMessage>(
     req: Request,
-  ) => Promise<GraphQLParams>;
+  ) => GraphQLParams | Promise<GraphQLParams>;
   stringify?: (value: unknown) => string;
   unexpected?: <Response extends ServerResponse>(
     res: Response,
