@@ -91,6 +91,7 @@ export function graphql(options: Options): RequestListener {
         const maybeAsyncIterable = await subscribe(args);
         if (isAsyncIterable(maybeAsyncIterable)) {
           res.setHeader('Content-Type', 'application/x-ndjson');
+          res.flushHeaders();
           res.on('close', () => maybeAsyncIterable.return());
           for await (const chunk of maybeAsyncIterable) {
             res.write(stringify(chunk) + '\n');
