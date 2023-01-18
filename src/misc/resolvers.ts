@@ -1,5 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {GraphQLResolveInfo, GraphQLSchema, isObjectType} from 'graphql/type';
+import {
+  getNamedType,
+  GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLNamedType,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLResolveInfo,
+  GraphQLSchema,
+  isEnumType,
+  isInputObjectType,
+  isNonNullType,
+  isObjectType,
+} from 'graphql/type';
 
 export type Resolver<Context> = (
   parent: any,
@@ -15,7 +28,11 @@ export type Subscriber<Context> = {
 
 export type Resolvers<Context> = {
   [typeName: string]: {
-    [fieldName: string]: Resolver<Context> | Subscriber<Context>;
+    [fieldName: string]:
+      | Resolver<Context>
+      | Subscriber<Context>
+      | string
+      | number;
   };
 };
 
@@ -39,6 +56,19 @@ export function addResolvers<Context = unknown>(
   for (const typeName of Object.keys(resolvers)) {
     const type = schema.getType(typeName);
     if (!isObjectType(type)) {
+      if (isEnumType(type)) {
+        const config = type.toConfig();
+        const enumType = resolvers[typeName];
+        for (const key of Object.keys(enumType)) {
+          const valueConfig = config.values[key];
+          if (valueConfig !== undefined) {
+            valueConfig.value = enumType[key];
+          }
+        }
+
+        fixSchemaTypeReferences(schema, new GraphQLEnumType(config));
+      }
+
       continue;
     }
 
@@ -53,10 +83,43 @@ export function addResolvers<Context = unknown>(
       const r = resolver[fieldName];
       if (typeof r === 'function') {
         field.resolve = r;
-      } else if (typeName === 'Subscription') {
+      } else if (typeName === 'Subscription' && typeof r === 'object') {
         field.subscribe = r.subscribe;
         field.resolve = r.resolve;
       }
+    }
+  }
+}
+
+function fixSchemaTypeReferences(
+  schema: GraphQLSchema,
+  target: GraphQLNamedType,
+) {
+  const types = schema.getTypeMap();
+  types[target.name] = target;
+  for (const t of Object.values(types)) {
+    if (isObjectType(t) || isInputObjectType(t)) {
+      fixTypeReferences(t, target);
+    }
+  }
+}
+
+function fixTypeReferences(
+  t: GraphQLInputObjectType | GraphQLObjectType,
+  target: GraphQLNamedType,
+) {
+  for (const field of Object.values(t.getFields())) {
+    const fieldType = field.type;
+    if (isNonNullType(fieldType)) {
+      if (getNamedType(fieldType).name === target.name) {
+        field.type = new GraphQLNonNull(target);
+      }
+    } else if (fieldType.name === target.name) {
+      field.type = target;
+    } else if (isObjectType(field)) {
+      fixTypeReferences(field, target);
+    } else if (isInputObjectType(field)) {
+      fixTypeReferences(field, target);
     }
   }
 }
