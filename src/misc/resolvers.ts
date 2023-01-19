@@ -2,6 +2,7 @@
 import {
   getNamedType,
   GraphQLEnumType,
+  GraphQLEnumValueConfigMap,
   GraphQLInputObjectType,
   GraphQLNamedType,
   GraphQLNonNull,
@@ -58,9 +59,14 @@ export function addResolvers<Context = unknown>(
     if (!isObjectType(type)) {
       if (isEnumType(type)) {
         const config = type.toConfig();
+        const enumValues: GraphQLEnumValueConfigMap = {};
+        for (const [key, value] of Object.entries(config.values)) {
+          enumValues[key.toUpperCase()] = value;
+        }
+
         const enumType = resolvers[typeName];
         for (const key of Object.keys(enumType)) {
-          const valueConfig = config.values[key];
+          const valueConfig = enumValues[key.toUpperCase()];
           if (valueConfig !== undefined) {
             valueConfig.value = enumType[key];
           }
