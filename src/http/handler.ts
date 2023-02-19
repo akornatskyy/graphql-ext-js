@@ -27,7 +27,9 @@ export type Options = {
   rootValue?: unknown;
   rules?: readonly ValidationRule[];
   context?: <Request extends IncomingMessage>(req: Request) => unknown;
-  formatError?: (error: GraphQLError) => GraphQLFormattedError;
+  formatError?: (
+    error: GraphQLError,
+  ) => GraphQLFormattedError | GraphQLFormattedError[];
   parseParams?: <Request extends IncomingMessage>(
     req: Request,
   ) => GraphQLParams | Promise<GraphQLParams>;
@@ -111,7 +113,7 @@ export function graphql(options: Options): RequestListener {
         res.end(
           stringify({
             // eslint-disable-next-line unicorn/no-array-callback-reference
-            errors: r.errors.map(formatError),
+            errors: r.errors.flatMap(formatError),
             data: r.data,
           }),
         );
