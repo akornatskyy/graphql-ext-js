@@ -61,12 +61,12 @@ export function addResolvers<Context = unknown>(
         const config = type.toConfig();
         const enumValues: GraphQLEnumValueConfigMap = {};
         for (const [key, value] of Object.entries(config.values)) {
-          enumValues[key.toUpperCase()] = value;
+          enumValues[key] = value;
         }
 
         const enumType = resolvers[typeName];
         for (const key of Object.keys(enumType)) {
-          const valueConfig = enumValues[key.toUpperCase()];
+          const valueConfig = enumValues[toUpperSnakeCase(key)];
           if (valueConfig !== undefined) {
             valueConfig.value = enumType[key];
           }
@@ -128,4 +128,11 @@ function fixTypeReferences(
       fixTypeReferences(field, target);
     }
   }
+}
+
+function toUpperSnakeCase(s: string): string {
+  return s
+    .split(/(?=[A-Z])/)
+    .join('_')
+    .toUpperCase();
 }
