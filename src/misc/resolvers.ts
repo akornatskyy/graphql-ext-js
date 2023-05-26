@@ -4,6 +4,7 @@ import {
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
   GraphQLInputObjectType,
+  GraphQLList,
   GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -11,6 +12,7 @@ import {
   GraphQLSchema,
   isEnumType,
   isInputObjectType,
+  isListType,
   isNonNullType,
   isObjectType,
 } from 'graphql/type';
@@ -114,18 +116,26 @@ function fixTypeReferences(
   t: GraphQLInputObjectType | GraphQLObjectType,
   target: GraphQLNamedType,
 ) {
+  const name = target.name;
   for (const field of Object.values(t.getFields())) {
     const fieldType = field.type;
     if (isNonNullType(fieldType)) {
-      if (getNamedType(fieldType).name === target.name) {
+      if (getNamedType(fieldType).name === name) {
         field.type = new GraphQLNonNull(target);
       }
-    } else if (fieldType.name === target.name) {
+    } else if (fieldType.name === name) {
       field.type = target;
     } else if (isObjectType(field)) {
       fixTypeReferences(field, target);
     } else if (isInputObjectType(field)) {
       fixTypeReferences(field, target);
+    } else if (
+      isListType(fieldType) &&
+      getNamedType(fieldType.ofType).name === name
+    ) {
+      field.type = isNonNullType(fieldType.ofType)
+        ? new GraphQLList(new GraphQLNonNull(target))
+        : new GraphQLList(target);
     }
   }
 }
