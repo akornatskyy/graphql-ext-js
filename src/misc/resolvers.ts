@@ -3,9 +3,9 @@ import {
   getNamedType,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
+  GraphQLInputField,
   GraphQLInputObjectType,
   GraphQLList,
-  GraphQLNamedType,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLResolveInfo,
@@ -101,7 +101,7 @@ export function addResolvers<Context = unknown>(
 
 function fixSchemaTypeReferences(
   schema: GraphQLSchema,
-  target: GraphQLNamedType,
+  target: GraphQLEnumType,
 ) {
   const types = schema.getTypeMap();
   types[target.name] = target;
@@ -114,10 +114,10 @@ function fixSchemaTypeReferences(
 
 function fixTypeReferences(
   t: GraphQLInputObjectType | GraphQLObjectType,
-  target: GraphQLNamedType,
+  target: GraphQLEnumType,
 ) {
   const name = target.name;
-  for (const field of Object.values(t.getFields())) {
+  for (const field of Object.values(t.getFields()) as GraphQLInputField[]) {
     const fieldType = field.type;
     if (isNonNullType(fieldType)) {
       if (getNamedType(fieldType).name === name) {
@@ -125,6 +125,9 @@ function fixTypeReferences(
       }
     } else if (fieldType.name === name) {
       field.type = target;
+      if (typeof field.defaultValue === 'string') {
+        field.defaultValue = target.getValue(field.defaultValue)?.value;
+      }
     } else if (isObjectType(field)) {
       fixTypeReferences(field, target);
     } else if (isInputObjectType(field)) {
