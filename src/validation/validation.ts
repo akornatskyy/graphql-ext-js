@@ -80,6 +80,7 @@ class Visitor {
     }
 
     this.variableValues = coerced;
+    return;
   }
 
   enterField() {
@@ -89,6 +90,7 @@ class Visitor {
     }
 
     this.path.push(field.name);
+    return;
   }
 
   leaveField() {
@@ -128,6 +130,8 @@ class Visitor {
       ) as unknown[];
       this.checkList(t, arg.astNode, input);
     }
+
+    return;
   }
 
   private checkScalar(
