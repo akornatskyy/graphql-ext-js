@@ -1,15 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  getNamedType,
   GraphQLEnumType,
-  GraphQLEnumValueConfigMap,
-  GraphQLInputField,
-  GraphQLInputObjectType,
   GraphQLList,
+  GraphQLNamedType,
   GraphQLNonNull,
-  GraphQLObjectType,
   GraphQLResolveInfo,
   GraphQLSchema,
+  GraphQLType,
   isEnumType,
   isInputObjectType,
   isListType,
@@ -18,7 +14,9 @@ import {
 } from 'graphql/type';
 
 export type Resolver<Context> = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parent: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: any,
   ctx: Context,
   info: GraphQLResolveInfo,
@@ -56,91 +54,79 @@ export function addResolvers<Context = unknown>(
   schema: GraphQLSchema,
   resolvers: Resolvers<Context>,
 ): void {
+  const typeMap = schema.getTypeMap();
   for (const typeName of Object.keys(resolvers)) {
-    const type = schema.getType(typeName);
-    if (!isObjectType(type)) {
-      if (isEnumType(type)) {
-        const config = type.toConfig();
-        const enumValues: GraphQLEnumValueConfigMap = {};
-        for (const [key, value] of Object.entries(config.values)) {
-          enumValues[key] = value;
+    const type = typeMap[typeName];
+    if (isEnumType(type)) {
+      const config = type.toConfig();
+      const enumValues = config.values;
+      const enumType = resolvers[typeName];
+      for (const key of Object.keys(enumType)) {
+        const value = enumValues[toUpperSnakeCase(key)];
+        if (value !== undefined) {
+          value.value = enumType[key];
+        }
+      }
+
+      typeMap[typeName] = new GraphQLEnumType(config);
+    } else if (isObjectType(type)) {
+      const resolver = resolvers[typeName];
+      const fields = type.getFields();
+      for (const fieldName of Object.keys(resolver)) {
+        const field = fields[fieldName];
+        if (field === undefined) {
+          continue;
         }
 
-        const enumType = resolvers[typeName];
-        for (const key of Object.keys(enumType)) {
-          const valueConfig = enumValues[toUpperSnakeCase(key)];
-          if (valueConfig !== undefined) {
-            valueConfig.value = enumType[key];
-          }
+        const r = resolver[fieldName];
+        if (typeof r === 'function') {
+          field.resolve = r;
+        } else if (typeName === 'Subscription' && typeof r === 'object') {
+          field.subscribe = r.subscribe;
+          field.resolve = r.resolve;
         }
-
-        fixSchemaTypeReferences(schema, new GraphQLEnumType(config));
-      }
-
-      continue;
-    }
-
-    const resolver = resolvers[typeName];
-    const fields = type.getFields();
-    for (const fieldName of Object.keys(resolver)) {
-      const field = fields[fieldName];
-      if (field === undefined) {
-        continue;
-      }
-
-      const r = resolver[fieldName];
-      if (typeof r === 'function') {
-        field.resolve = r;
-      } else if (typeName === 'Subscription' && typeof r === 'object') {
-        field.subscribe = r.subscribe;
-        field.resolve = r.resolve;
       }
     }
+  }
+
+  fixSchemaTypeReferences(typeMap);
+}
+
+function fixSchemaTypeReferences(typeMap: Record<string, GraphQLNamedType>) {
+  for (const typeName of Object.keys(typeMap)) {
+    const type = typeMap[typeName];
+    if (isObjectType(type)) {
+      // TODO: interfaces
+      for (const field of Object.values(type.getFields())) {
+        field.type = fixTypeReference(typeMap, field.type);
+        for (const arg of field.args) {
+          arg.type = fixTypeReference(typeMap, arg.type);
+        }
+      }
+    } else if (isInputObjectType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        field.type = fixTypeReference(typeMap, field.type);
+      }
+    }
+    // TODO: interfaces & unions
   }
 }
 
-function fixSchemaTypeReferences(
-  schema: GraphQLSchema,
-  target: GraphQLEnumType,
-) {
-  const types = schema.getTypeMap();
-  types[target.name] = target;
-  for (const t of Object.values(types)) {
-    if (isObjectType(t) || isInputObjectType(t)) {
-      fixTypeReferences(t, target);
-    }
+function fixTypeReference<T extends GraphQLType>(
+  typeMap: Record<string, GraphQLNamedType>,
+  type: T,
+): T {
+  if (isNonNullType(type)) {
+    const t = fixTypeReference(typeMap, type.ofType);
+    return t === type.ofType ? type : (new GraphQLNonNull(t) as T);
   }
-}
 
-function fixTypeReferences(
-  t: GraphQLInputObjectType | GraphQLObjectType,
-  target: GraphQLEnumType,
-) {
-  const name = target.name;
-  for (const field of Object.values(t.getFields()) as GraphQLInputField[]) {
-    const fieldType = field.type;
-    if (isNonNullType(fieldType)) {
-      if (getNamedType(fieldType).name === name) {
-        field.type = new GraphQLNonNull(target);
-      }
-    } else if (fieldType.name === name) {
-      field.type = target;
-      if (typeof field.defaultValue === 'string') {
-        field.defaultValue = target.getValue(field.defaultValue)?.value;
-      }
-    } else if (isObjectType(field)) {
-      fixTypeReferences(field, target);
-    } else if (isInputObjectType(field)) {
-      fixTypeReferences(field, target);
-    } else if (
-      isListType(fieldType) &&
-      getNamedType(fieldType.ofType).name === name
-    ) {
-      field.type = isNonNullType(fieldType.ofType)
-        ? new GraphQLList(new GraphQLNonNull(target))
-        : new GraphQLList(target);
-    }
+  if (isListType(type)) {
+    const t = fixTypeReference(typeMap, type.ofType);
+    return t === type.ofType ? type : (new GraphQLList(t) as T);
   }
+
+  return typeMap[type.name] as T;
 }
 
 function toUpperSnakeCase(s: string): string {
