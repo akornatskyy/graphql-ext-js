@@ -1,11 +1,13 @@
 import {
   GraphQLEnumType,
+  GraphQLInputType,
   GraphQLList,
   GraphQLNamedType,
   GraphQLNonNull,
   GraphQLResolveInfo,
   GraphQLSchema,
   GraphQLType,
+  getNullableType,
   isEnumType,
   isInputObjectType,
   isListType,
@@ -90,6 +92,14 @@ export function addResolvers<Context = unknown>(
   }
 
   fixSchemaTypeReferences(typeMap);
+  fixSchemaDefaultValues(typeMap);
+}
+
+function toUpperSnakeCase(s: string): string {
+  return s
+    .split(/(?=[A-Z])/)
+    .join('_')
+    .toUpperCase();
 }
 
 function fixSchemaTypeReferences(typeMap: Record<string, GraphQLNamedType>) {
@@ -129,9 +139,52 @@ function fixTypeReference<T extends GraphQLType>(
   return typeMap[type.name] as T;
 }
 
-function toUpperSnakeCase(s: string): string {
-  return s
-    .split(/(?=[A-Z])/)
-    .join('_')
-    .toUpperCase();
+function fixSchemaDefaultValues(typeMap: Record<string, GraphQLNamedType>) {
+  for (const typeName of Object.keys(typeMap)) {
+    const type = typeMap[typeName];
+    if (isObjectType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        for (const arg of field.args) {
+          arg.defaultValue = fixTypeDefaultValue(arg.type, arg.defaultValue);
+        }
+      }
+    } else if (isInputObjectType(type)) {
+      for (const field of Object.values(type.getFields())) {
+        field.defaultValue = fixTypeDefaultValue(
+          field.type,
+          field.defaultValue,
+        );
+      }
+    }
+  }
+}
+
+function fixTypeDefaultValue(type: GraphQLInputType, value: unknown) {
+  if (value === undefined || value === null) {
+    return value;
+  }
+
+  type = getNullableType(type);
+  if (isEnumType(type)) {
+    return type.parseValue(value);
+  }
+
+  if (isInputObjectType(type) && typeof value === 'object') {
+    const fields = type.getFields();
+    const newValue: Record<string, unknown> = {};
+    for (const key of Object.keys(value)) {
+      const field = fields[key];
+      if (field !== undefined) {
+        newValue[key] = fixTypeDefaultValue(
+          field.type,
+          (value as Record<string, unknown>)[key],
+        );
+      }
+    }
+
+    return newValue;
+  }
+
+  // scalar
+  return value;
 }
