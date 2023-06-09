@@ -10,6 +10,7 @@ import {
   getNullableType,
   isEnumType,
   isInputObjectType,
+  isInterfaceType,
   isListType,
   isNonNullType,
   isObjectType,
@@ -105,8 +106,7 @@ function toUpperSnakeCase(s: string): string {
 function fixSchemaTypeReferences(typeMap: Record<string, GraphQLNamedType>) {
   for (const typeName of Object.keys(typeMap)) {
     const type = typeMap[typeName];
-    if (isObjectType(type)) {
-      // TODO: interfaces
+    if (isObjectType(type) || isInterfaceType(type)) {
       for (const field of Object.values(type.getFields())) {
         field.type = fixTypeReference(typeMap, field.type);
         for (const arg of field.args) {
