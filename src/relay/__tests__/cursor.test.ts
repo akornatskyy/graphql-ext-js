@@ -205,14 +205,14 @@ describe('relay cursor connection', () => {
   );
 
   it.each([-2, -1, 0])('throws for first %s', (first) => {
-    expect(() => c.toOffsetPaging({first}, 10)).toThrowError(/first/);
+    expect(() => c.toOffsetPaging({first}, 10)).toThrow(/first/);
   });
 
   it.each([-2, -1, 0])('throws for last %s', (last) => {
-    expect(() => c.toOffsetPaging({last}, 10)).toThrowError(/last/);
+    expect(() => c.toOffsetPaging({last}, 10)).toThrow(/last/);
   });
 
   it('throws invalid cursor', () => {
-    expect(() => c.cursorToOffset('abc')).toThrowError(/invalid/i);
+    expect(() => c.cursorToOffset('abc')).toThrow(/invalid/i);
   });
 });
